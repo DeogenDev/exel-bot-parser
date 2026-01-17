@@ -1,0 +1,13 @@
+[project]
+name = "exel-bot-parser"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiogram>=3.24.0",
+    "google-auth>=2.47.0",
+    "gspread>=6.2.1",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+]
