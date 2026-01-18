@@ -3,6 +3,8 @@
 import logging
 from aiogram import Bot, Dispatcher
 
+from .handlers import group_message_router
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,10 +14,7 @@ class MessageParserBot:
         self.parsing_chat_id = parse_channel_id
         self.dp = Dispatcher()
 
-    async def on_new_message(self, message):
-        pass
-
     async def run(self):
         """Запуск бота."""
-        self.dp.startup.register(self.on_new_message)
+        self.dp.include_routers(group_message_router)
         await self.dp.start_polling(self.bot)
