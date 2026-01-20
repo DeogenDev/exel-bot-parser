@@ -7,33 +7,38 @@ from src.models import ExtractMessage, ProductCount
 logger = logging.getLogger(__name__)
 
 
-class TextExtractor:
+class MessageExtractError(ValueError):
+    pass
+
+
+class MessageExtractNoName(ValueError):
+    pass
+
+
+class MessageExtractor:
     BUYER_NAME_PATTERN = re.compile(
         r"^Заказ \d+\s*\n(.+?)(?=\n[A-Z]|$)",
         re.MULTILINE,
     )
-
     PRODUCT_PATTERN = re.compile(r"^\s*(.+?)\s*-\s*(\d+)\s*$")
-
     FLAG_COLONS_PATTERN = re.compile(r":([A-Z]{2}):")
 
     def extract_message(self, text: str) -> ExtractMessage:
-        try:
-            normalized_text = dflagize(text)
+        normalized_text = dflagize(text)
 
-            buyer_name = self._extract_buyer_name(text)
-            products = self._extract_products(normalized_text)
+        buyer_name = self._extract_buyer_name(text)
+        products = self._extract_products(normalized_text)
 
-            return ExtractMessage(
-                buyer_name=buyer_name,
-                products=products,
-            )
-        except Exception as e:
-            print(e)
-            return ExtractMessage(
-                buyer_name="Неизвестный",
-                products=[],
-            )
+        if buyer_name == "Неизвестный":
+            raise MessageExtractNoName("Message buyer name not found: %s")
+
+        if not products:
+            raise MessageExtractError("Message products not found: %s")
+
+        return ExtractMessage(
+            buyer_name=buyer_name,
+            products=products,
+        )
 
     def _extract_buyer_name(self, text: str) -> str:
         match = self.BUYER_NAME_PATTERN.search(text.strip())
@@ -59,3 +64,6 @@ class TextExtractor:
 
     def _normalize_flag_code(self, name: str) -> str:
         return self.FLAG_COLONS_PATTERN.sub(r"\1", name).strip()
+
+
+messages_extractor = MessageExtractor()
