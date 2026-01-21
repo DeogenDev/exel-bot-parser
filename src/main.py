@@ -3,22 +3,13 @@
 import logging
 import asyncio
 
-from src.shared import conf
-from src.bot import MessageParserBot
 
-from src.utils import messages_extractor
+from src.utils import message_parser_bot
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
-
-message_parser_bot = MessageParserBot(
-    token=conf.bot.token,
-    parse_channel_id=conf.bot.parse_channel_id,
-    messages_extractor=messages_extractor,
-)
 
 
 async def main():

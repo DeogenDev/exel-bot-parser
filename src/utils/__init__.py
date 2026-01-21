@@ -7,9 +7,12 @@ from .message_extractor import (
     MessageExtractNoName,
 )
 
+from .clients import message_parser_bot
+
 __all__ = (
     "messages_extractor",
     "MessageExtractor",
     "MessageExtractError",
     "MessageExtractNoName",
+    "message_parser_bot",
 )

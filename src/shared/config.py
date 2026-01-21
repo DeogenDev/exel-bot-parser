@@ -18,11 +18,19 @@ class GooglConfig(BaseModel):
     token_path: str = "storage/token.json"
 
 
+class RedisConfig(BaseModel):
+    """Данные конфигурации Redis."""
+
+    host: str
+    port: int
+
+
 class Config(BaseSettings):
     """Настройки приложения."""
 
     bot: BotConfig
     google: GooglConfig
+    redis: RedisConfig
 
     class Config:
         env_file = ".env"

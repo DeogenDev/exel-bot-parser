@@ -1,19 +1,46 @@
-# Docker Compose для RabbitMQ
+version: "3.9"
+
 services:
   rabbitmq:
-    image: rabbitmq:3-management-alpine
-    hostname: rabbitmq
+    image: rabbitmq:3-management
     container_name: rabbitmq
+    restart: unless-stopped
     ports:
-      - "5672:5672" # AMQP протокол
-      - "15672:15672" # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: "guest"
-      RABBITMQ_DEFAULT_PASS: "guest"
-    volumes:
-      - ./data/var/lib/rabbitmq:/var/lib/rabbitmq
-    networks:
-      - data
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
 
-networks:
-  data:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    volumes:
+      - redis-data:/data
+
+  bot:
+    build: .
+    container_name: tg-bot
+    command: python -m src.main
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+  celery-worker:
+    build: .
+    container_name: celery-worker
+    command: celery -A src.celery_app worker -Q cleanup,default -l info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  redis-data:
