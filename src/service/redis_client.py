@@ -3,33 +3,37 @@
 from redis.asyncio.client import Redis
 
 
-class IdsRedisStorage:
+class MessageRedisStorage:
     """
     Отвечает ТОЛЬКО за хранение и чтение айдишников.
     """
 
-    def __init__(self, redis_client: Redis):
+    def __init__(self, redis_client: Redis, chat_id: int) -> None:
         self._redis = redis_client
+        self._key = chat_id
 
-    async def add_message_id(self, message_id: int) -> None:
-        await self._add("message_ids", message_id)
+    async def save_message(self, message_id: int, text: str) -> None:
+        """Сохраняет или обновляет сообщение."""
+        await self._redis.hset(self._key, message_id, text)
 
     async def get_all_message_ids(self) -> list[int]:
-        return await self._get_all("message_ids")
+        """Возвращает все message_id, которые есть в Redis."""
+        ids = await self._redis.hkeys(self._key)
+        return [int(i) for i in ids]
 
-    async def remove_ids(self) -> list[int]:
-        response = await self.get_all_message_ids()
-        await self._redis.delete("message_ids")
-        return response
+    async def remove_all_messages(self) -> list[int]:
+        """
+        Удаляет все сообщения из Redis и возвращает список их ID.
+        Аналог твоего remove_ids.
+        """
+        message_ids = await self.get_all_message_ids()
+        if message_ids:
+            await self._redis.delete(self._key)
+        return message_ids
 
-    async def exists(self, key: str) -> bool:
-        return await self._redis.exists(key) == 1
-
-    async def _add(self, key: str, *ids: int) -> None:
-        if not ids:
-            return
-        await self._redis.sadd(key, *ids)
-
-    async def _get_all(self, key: str) -> list[int]:
-        raw = await self._redis.smembers(key)
-        return [int(i) for i in raw]
+    async def get_all_messages(self) -> dict[int, str]:
+        """
+        Возвращает все сообщения в формате {message_id: text}.
+        """
+        raw = await self._redis.hgetall(self._key)
+        return {int(k): v for k, v in raw.items()}

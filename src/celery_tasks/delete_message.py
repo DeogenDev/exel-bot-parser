@@ -1,3 +1,5 @@
+"""Задача на удаление сообщений."""
+
 import asyncio
 import logging
 
@@ -18,9 +20,10 @@ def delete_messages_task(self, message_ids: list[int]):
     """
     logger.info(f"Deleting {len(message_ids)} messages")
 
+    bot = Bot(token=conf.bot.token)
+    int_chat_id = int(conf.bot.parse_channel_id)
+
     async def _delete():
-        bot = Bot(token=conf.bot.token)
-        int_chat_id = int(conf.bot.parse_channel_id)
         logger.info(f"Deleting {len(message_ids)} messages")
         for message_id in message_ids:
             try:

@@ -24,3 +24,16 @@ class InputProducts(BaseModel):
     insert_data: List[InsertData] = Field(
         ..., min_items=1, description="Список ячеек для заполнения"
     )
+
+
+class BatchData(BaseModel):
+    range: str = Field(..., description="Диапазон ячейки")
+    values: List[List[str | int | float]]
+
+
+class InputBatchProduct(BaseModel):
+    """Вставка батча товаров."""
+
+    insert_data: List[BatchData] = Field(
+        ..., min_items=1, description="Список ячеек для заполнения"
+    )

@@ -7,7 +7,7 @@ from .message_extractor import (
     MessageExtractNoName,
 )
 
-from .clients import message_parser_bot
+from .clients import message_parser_bot, table_manager
 
 __all__ = (
     "messages_extractor",
@@ -15,4 +15,5 @@ __all__ = (
     "MessageExtractError",
     "MessageExtractNoName",
     "message_parser_bot",
+    "table_manager",
 )

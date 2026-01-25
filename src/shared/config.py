@@ -15,7 +15,8 @@ class GooglConfig(BaseModel):
     """Настройки Google Auth."""
 
     credentials_path: str = "storage/credentials.json"
-    token_path: str = "storage/token.json"
+    sheet_name: str = ""
+    spreadsheet_id: str = ""
 
 
 class RedisConfig(BaseModel):

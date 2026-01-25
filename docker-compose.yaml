@@ -30,17 +30,21 @@ services:
       - redis
       - rabbitmq
     restart: unless-stopped
+    volumes:
+      - ./storage:/app/storage
 
   celery-worker:
     build: .
     container_name: celery-worker
-    command: celery -A src.celery_app worker -Q cleanup,default -l info
+    command: celery -A src.celery_app worker -Q cleanup,default,transfer -l info
     env_file:
       - .env
     depends_on:
       - redis
       - rabbitmq
     restart: unless-stopped
+    volumes:
+      - ./storage:/app/storage
 
 volumes:
   redis-data:

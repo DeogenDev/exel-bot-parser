@@ -1,8 +1,15 @@
 """Модели"""
 
 from .extract_message import ExtractMessage, ProductCount
-from .exel_table import HorizontalProductLine, InputProducts, InsertData
+from .exel_table import (
+    HorizontalProductLine,
+    InputProducts,
+    InsertData,
+    InputBatchProduct,
+    BatchData,
+)
 from .similarity import OutputCharComparator
+from .message import TgMessage
 
 __all__ = (
     "ExtractMessage",
@@ -11,4 +18,7 @@ __all__ = (
     "InputProducts",
     "InsertData",
     "OutputCharComparator",
+    "TgMessage",
+    "InputBatchProduct",
+    "BatchData",
 )

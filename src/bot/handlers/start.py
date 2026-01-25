@@ -12,5 +12,5 @@ router = Router()
 @router.message(CommandStart())
 async def start(message: Message):
     await message.answer(
-        "Привет, я бот для переноса заказов", reply_markup=MENU_KEYBOARD
+        "Привет, я бот для переноса заказов в exel таблицу.", reply_markup=MENU_KEYBOARD
     )
