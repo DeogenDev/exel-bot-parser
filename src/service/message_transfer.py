@@ -12,9 +12,9 @@ class MessageTransferService:
         self._storage = storage
         self.transfer_messages_task = transfer_messages_task
 
-    async def transfer_messages(self) -> None:
+    async def transfer_messages(self, user_id: int) -> None:
         ids = await self._storage.get_all_messages()
         texts = list(ids.values())
         logger.info(f"Put to transferd {len(ids)} messages")
         if ids:
-            self.transfer_messages_task.delay(texts)
+            self.transfer_messages_task.delay(texts, user_id)

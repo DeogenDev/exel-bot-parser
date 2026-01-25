@@ -5,12 +5,12 @@ from aiogram import Bot, Dispatcher
 
 from .handlers import (
     transfer_orders_router,
-    menu_router,
     start_router,
     clear_chat_router,
     on_group_message_router,
+    info_router,
 )
-from .middleware import ContextMiddleware
+from .middleware import ContextMiddleware, AuthMiddleware
 from src.service import (
     MessageRedisStorage,
     MessageCleanupService,
@@ -46,11 +46,12 @@ class MessageParserBot:
                 self.message_transfer_service,
             )
         )
+        self.dp.message.middleware(AuthMiddleware())
         self.dp.include_routers(
             transfer_orders_router,
-            menu_router,
             start_router,
             clear_chat_router,
             on_group_message_router,
+            info_router,
         )
         await self.dp.start_polling(self.bot)

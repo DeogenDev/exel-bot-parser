@@ -1,12 +1,17 @@
 """Мидлвар для контекста."""
 
+from typing import Union
+
 from aiogram import BaseMiddleware
+from aiogram.types import Message, CallbackQuery
 
 from src.service import (
     MessageRedisStorage,
     MessageCleanupService,
     MessageTransferService,
 )
+
+from src.shared import conf
 
 
 class ContextMiddleware(BaseMiddleware):
@@ -32,3 +37,23 @@ class ContextMiddleware(BaseMiddleware):
         data["message_cleanup_service"] = self.message_cleanup_service
         data["message_transfer_service"] = self.message_transfer_service
         return await handler(event, data)
+
+
+class AuthMiddleware(BaseMiddleware):
+    NOT_ACCESS_TEXT = "⛔ У вас нет доступа. Свяжитесь с администратором."
+
+    def __init__(self) -> None:
+        self.managers = set(conf.bot.managers)
+
+    async def __call__(
+        self,
+        handler,
+        event: Union[Message, CallbackQuery],
+        data: dict,
+    ) -> None:
+        user_id = event.from_user.id
+
+        if user_id in self.managers:
+            return await handler(event, data)
+
+        return None

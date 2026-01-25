@@ -1,6 +1,6 @@
 """Настройки приложения."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -9,6 +9,13 @@ class BotConfig(BaseModel):
 
     token: str
     parse_channel_id: str
+    managers: list[int]
+
+    @field_validator("managers")
+    def validate_managers(cls, value):
+        if isinstance(value, int):
+            return [int(v.strip()) for v in value.split(",")]
+        return value
 
 
 class GooglConfig(BaseModel):
