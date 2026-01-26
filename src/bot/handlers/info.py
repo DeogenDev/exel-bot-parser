@@ -46,6 +46,6 @@ async def open_info(
 
     await callback.message.edit_text(
         text=text,
-        reply_markup=RETURN_TO_MENU_KEYBOARD.f,
+        reply_markup=RETURN_TO_MENU_KEYBOARD,
         parse_mode="HTML",
     )

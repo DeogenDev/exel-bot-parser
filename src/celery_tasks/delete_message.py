@@ -6,7 +6,7 @@ import logging
 from aiogram import Bot
 
 from src.shared import conf
-from src.utils import send_telegram_message
+from src.shared import send_telegram_message
 from src.celery_app import app
 
 

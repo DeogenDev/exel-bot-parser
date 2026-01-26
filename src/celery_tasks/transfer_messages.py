@@ -8,7 +8,7 @@ from gspread.utils import rowcol_to_a1
 from src.shared import conf
 from src.celery_app import app
 from src.models import BatchData, InputBatchProduct, ExtractMessage
-from src.utils import send_telegram_message
+from src.shared import send_telegram_message
 
 
 logger = logging.getLogger(__name__)

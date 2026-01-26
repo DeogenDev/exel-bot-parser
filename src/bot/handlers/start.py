@@ -3,6 +3,8 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
+from aiogram.enums import ChatType
+
 
 from src.bot.keyboards import MENU_KEYBOARD
 
@@ -12,7 +14,7 @@ router = Router()
 menu_text = "🛂 Бот для переноса заказов в exel таблицу.\nВыберите действие:"
 
 
-@router.message(CommandStart(), F.message.chat.type == "private")
+@router.message(CommandStart(), F.chat.type == ChatType.PRIVATE)
 async def start(message: Message):
     await message.answer(
         menu_text,
