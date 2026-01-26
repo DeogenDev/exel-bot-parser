@@ -9,6 +9,8 @@ class BotConfig(BaseModel):
 
     token: str
     parse_channel_id: str
+    parse_topic_id: int
+    logs_topic_id: int
     managers: list[int]
 
     @field_validator("managers")

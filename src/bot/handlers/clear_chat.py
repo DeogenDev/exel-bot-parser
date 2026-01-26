@@ -48,5 +48,5 @@ async def total_clear_chat(
     message_cleanup_service: MessageCleanupService,
 ):
     await callback.message.delete_reply_markup()
-    await message_cleanup_service.remove_all_messages()
+    await message_cleanup_service.remove_all_messages(user_id=callback.from_user.id)
     await callback.message.answer("🧹 Очищаю чат...")

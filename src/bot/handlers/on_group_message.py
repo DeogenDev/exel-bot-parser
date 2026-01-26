@@ -15,10 +15,13 @@ async def save_group_message(
     message: Message,
     parsing_chat_id: str,
     redis_client: MessageRedisStorage,
+    parse_topic_id: int,
 ):
     """Сохраняет текст сообщения в Redis, проверяя chat_id."""
-    if message.chat.id != int(parsing_chat_id):
-        logger.info("Received message from unknown chat: %s", message.chat.username)
+    if (
+        message.chat.id != int(parsing_chat_id)
+        and message.message_thread_id != parse_topic_id
+    ):
         return
     if not message.text:
         return
@@ -31,11 +34,13 @@ async def handle_group_text(
     message: Message,
     parsing_chat_id: str,
     redis_client: MessageRedisStorage,
+    parse_topic_id: int,
 ):
     await save_group_message(
         message,
         parsing_chat_id,
         redis_client,
+        parse_topic_id,
     )
 
 
@@ -44,9 +49,11 @@ async def handle_edited_group_text(
     message: Message,
     parsing_chat_id: str,
     redis_client: MessageRedisStorage,
+    parse_topic_id: int,
 ):
     await save_group_message(
         message,
         parsing_chat_id,
         redis_client,
+        parse_topic_id,
     )

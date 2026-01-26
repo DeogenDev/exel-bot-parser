@@ -12,7 +12,7 @@ router = Router()
 menu_text = "🛂 Бот для переноса заказов в exel таблицу.\nВыберите действие:"
 
 
-@router.message(CommandStart())
+@router.message(CommandStart(), F.message.chat.type == "private")
 async def start(message: Message):
     await message.answer(
         menu_text,

@@ -23,12 +23,16 @@ class ContextMiddleware(BaseMiddleware):
         redis_client: MessageRedisStorage,
         message_cleanup_service: MessageCleanupService,
         message_transfer_service: MessageTransferService,
+        parse_topic_id: int,
+        logs_topic_id: int,
     ):
         """Initialize middleware."""
         self.parsing_chat_id = parsing_chat_id
         self.redis_client = redis_client
         self.message_cleanup_service = message_cleanup_service
         self.message_transfer_service = message_transfer_service
+        self.parse_topic_id = parse_topic_id
+        self.logs_topic_id = logs_topic_id
 
     async def __call__(self, handler, event, data):
         """Inject parsing chat ID and extractor into handler."""
@@ -36,6 +40,8 @@ class ContextMiddleware(BaseMiddleware):
         data["redis_client"] = self.redis_client
         data["message_cleanup_service"] = self.message_cleanup_service
         data["message_transfer_service"] = self.message_transfer_service
+        data["parse_topic_id"] = self.parse_topic_id
+        data["logs_topic_id"] = self.logs_topic_id
         return await handler(event, data)
 
 

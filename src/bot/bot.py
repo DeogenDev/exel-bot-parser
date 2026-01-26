@@ -25,12 +25,16 @@ class MessageParserBot:
         self,
         token: str,
         parse_channel_id: str,
+        parse_topic_id: int,
+        logs_topic_id: int,
         redis_client: MessageRedisStorage,
         message_cleanup_service: MessageCleanupService,
         message_transfer_service: MessageTransferService,
     ):
         self.bot = Bot(token)
         self.parsing_chat_id = parse_channel_id
+        self.parse_topic_id = parse_topic_id
+        self.logs_topic_id = logs_topic_id
         self.dp = Dispatcher()
         self.redis_client = redis_client
         self.message_cleanup_service = message_cleanup_service
@@ -44,6 +48,8 @@ class MessageParserBot:
                 self.redis_client,
                 self.message_cleanup_service,
                 self.message_transfer_service,
+                self.parse_topic_id,
+                self.logs_topic_id,
             )
         )
         self.dp.message.middleware(AuthMiddleware())

@@ -12,8 +12,8 @@ class MessageCleanupService:
         self._storage = storage
         self.delete_messages_task = delete_messages_task
 
-    async def remove_all_messages(self) -> None:
+    async def remove_all_messages(self, user_id: int) -> None:
         ids = await self._storage.remove_all_messages()
         logger.info(f"Put to deleted {len(ids)} messages")
         if ids:
-            self.delete_messages_task.delay(ids)
+            self.delete_messages_task.delay(ids, user_id)
