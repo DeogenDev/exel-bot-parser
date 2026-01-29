@@ -52,7 +52,13 @@ class MessageParserBot:
                 self.logs_topic_id,
             )
         )
-        self.dp.message.middleware(AuthMiddleware())
+
+        auth = AuthMiddleware()
+        transfer_orders_router.message.middleware(auth)
+        start_router.message.middleware(auth)
+        clear_chat_router.message.middleware(auth)
+        info_router.message.middleware(auth)
+
         self.dp.include_routers(
             transfer_orders_router,
             start_router,
@@ -60,4 +66,5 @@ class MessageParserBot:
             on_group_message_router,
             info_router,
         )
+
         await self.dp.start_polling(self.bot)

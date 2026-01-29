@@ -46,8 +46,6 @@ class ContextMiddleware(BaseMiddleware):
 
 
 class AuthMiddleware(BaseMiddleware):
-    NOT_ACCESS_TEXT = "⛔ У вас нет доступа. Свяжитесь с администратором."
-
     def __init__(self) -> None:
         self.managers = set(conf.bot.managers)
 

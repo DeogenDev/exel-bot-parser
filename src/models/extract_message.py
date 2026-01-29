@@ -13,3 +13,4 @@ class ProductCount(BaseModel):
 class ExtractMessage(BaseModel):
     buyer_name: str
     products: List[ProductCount] = Field(..., min_items=1)
+    errors_products: List[str]

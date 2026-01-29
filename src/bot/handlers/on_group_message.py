@@ -20,7 +20,7 @@ async def save_group_message(
     """Сохраняет текст сообщения в Redis, проверяя chat_id."""
     if (
         message.chat.id != int(parsing_chat_id)
-        and message.message_thread_id != parse_topic_id
+        or message.message_thread_id != parse_topic_id
     ):
         return
     if not message.text:

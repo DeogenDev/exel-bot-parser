@@ -63,41 +63,92 @@ async def send_log_message(
     )
 
 
+async def send_error_log_message(original_text: str, error_text: str) -> None:
+    text = f"⛔️⛔️Ошибка при обработке сообщения⛔️⛔️\n======Сообщение======\n\n{original_text}\n======Причина======\n{error_text}"
+    await send_telegram_message(
+        chat_id=conf.bot.parse_channel_id,
+        text=text,
+        thread_id=conf.bot.logs_topic_id,
+    )
+
+
+async def extract_messages(
+    messages: list[str],
+) -> tuple[list[ExtractMessage], list[str]]:
+    from src.utils.message_extractor import (
+        messages_extractor,
+        MessageExtractError,
+        MessageExtractNoName,
+    )
+
+    extracted_messages: list[ExtractMessage] = []
+    input_messages = []
+
+    for message in messages:
+        try:
+            extracted = messages_extractor.extract_message(message)
+            extracted_messages.append(extracted)
+            input_messages.append(message)
+            logger.info(extracted.errors_products)
+            if extracted.errors_products:
+                error_text = "Не удалось распознать товары:\n" + "\n".join(
+                    extracted.errors_products
+                )
+                await send_error_log_message(
+                    original_text=message,
+                    error_text=error_text,
+                )
+        except MessageExtractNoName:
+            logger.warning("Message %s has no buyer name", message)
+            await send_error_log_message(
+                original_text=message,
+                error_text="Не удалось распознать покупателя.",
+            )
+        except MessageExtractError as e:
+            await send_error_log_message(
+                original_text=message,
+                error_text=str(e),
+            )
+            logger.exception(
+                "Failed to extract message ID %s (other extraction error)",
+            )
+            continue
+
+    return extracted_messages, input_messages
+
+
+def get_table_data(table_manager) -> tuple[list, int]:
+    base_texts = table_manager.get_product_names_and_indexes()
+    current_column = table_manager.get_empty_column_letter()
+
+    if not base_texts:
+        raise Exception("No product names in table")
+
+    if not current_column:
+        raise Exception("No empty column in table")
+
+    return base_texts, current_column
+
+
 @app.task(name="transfer_message_task", bind=True, queue="transfer")
 def transfer_message_task(self, messages: list[str], output_user_id: int) -> None:
-    from src.utils.message_extractor import messages_extractor
-    from src.utils import table_manager
     from src.service import CharComparator
+    from src.utils import table_manager
+
+    char_comparator = CharComparator()
 
     if not messages:
         logger.warning("transfer_message_task called with empty messages list")
         return
 
-    char_comparator = CharComparator()
-    messages_count = len(messages)
-
-    logger.info("Extracting %s messages", messages_count)
-
-    try:
-        extracted_messages = [
-            messages_extractor.extract_message(message) for message in messages
-        ]
-    except Exception:
-        logger.exception("Failed to extract messages")
-        return
-
-    try:
-        base_texts = table_manager.get_product_names_and_indexes()
-        current_column = table_manager.get_empty_column_letter()
-    except Exception:
-        logger.exception("Failed to initialize table state")
-        return
+    base_texts, current_column = get_table_data(table_manager)
+    extracted_messages, input_messages = asyncio.run(extract_messages(messages))
 
     inserted_messages_count = 0
     processed_products_count = 0
-    failed_messages_count = 0
 
-    for original_text, extracted in zip(messages, extracted_messages):
+    for original_text, extracted in zip(input_messages, extracted_messages):
+        failed_products: list[str] = []
         try:
             batch = InputBatchProduct(
                 insert_data=[
@@ -116,16 +167,9 @@ def transfer_message_task(self, messages: list[str], output_user_id: int) -> Non
                     )
                 except Exception:
                     logger.exception(
-                        "CharComparator failed for product '%s'",
-                        product.name,
+                        "CharComparator failed for product '%s'", product.name
                     )
-                    asyncio.run(
-                        send_telegram_message(
-                            chat_id=output_user_id,
-                            thread_id=conf.bot.logs_topic_id,
-                            text=COMPRATOR_TEXT_ERROR.format(product_name=product.name),
-                        )
-                    )
+                    failed_products.append(product.name)
                     continue
 
                 batch.insert_data.append(
@@ -153,13 +197,16 @@ def transfer_message_task(self, messages: list[str], output_user_id: int) -> Non
                 )
             )
 
-        except Exception:
-            failed_messages_count += 1
-            logger.exception("Failed to process message: %s", original_text)
-            continue
-
+        except Exception as e:
+            logger.exception("Failed to process message (critical): %s", e)
+            asyncio.run(
+                send_error_log_message(
+                    original_text=original_text,
+                    error_text=str(e),
+                )
+            )
     result_text = get_send_result_text(
-        messages_count,
+        len(messages),
         inserted_messages_count,
         sum(len(msg.products) for msg in extracted_messages if msg.products),
         processed_products_count,
@@ -170,11 +217,4 @@ def transfer_message_task(self, messages: list[str], output_user_id: int) -> Non
             chat_id=output_user_id,
             text=result_text,
         )
-    )
-
-    logger.info(
-        "Finished transfer_message_task: total=%s, inserted=%s, failed=%s",
-        messages_count,
-        inserted_messages_count,
-        failed_messages_count,
     )
