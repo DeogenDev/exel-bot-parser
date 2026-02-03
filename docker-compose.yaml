@@ -5,13 +5,21 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ__USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ__PASSWORD}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit vm_memory_high_watermark 0.4"
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+        reservations:
+          memory: 200M
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -32,11 +40,15 @@ services:
     restart: unless-stopped
     volumes:
       - ./storage:/app/storage
+    deploy:
+      resources:
+        limits:
+          memory: 250M
 
   celery-worker:
     build: .
     container_name: celery-worker
-    command: celery -A src.celery_app worker -Q cleanup,default,transfer -l info
+    command: celery -A src.celery_app worker --concurrency=2 -Q cleanup,default,transfer -l info
     env_file:
       - .env
     depends_on:
@@ -45,6 +57,10 @@ services:
     restart: unless-stopped
     volumes:
       - ./storage:/app/storage
+    deploy:
+      resources:
+        limits:
+          memory: 300M
 
 volumes:
   redis-data:

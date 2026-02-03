@@ -35,12 +35,20 @@ class RedisConfig(BaseModel):
     port: int
 
 
+class RabitMQConfig(BaseModel):
+    """Данные конфигурации RebitMQ."""
+
+    user: str
+    password: str
+
+
 class Config(BaseSettings):
     """Настройки приложения."""
 
     bot: BotConfig
     google: GooglConfig
     redis: RedisConfig
+    rabbitmq: RabitMQConfig
 
     class Config:
         env_file = ".env"
