@@ -41,6 +41,9 @@ class MessageExtractor:
 
         products, errors_products = self._extract_products(products_text)
 
+        if not products:
+            raise MessageExtractError("Не удалось распознать товары.")
+
         return ExtractMessage(
             buyer_name=buyer_name,
             products=products,

@@ -17,9 +17,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 400M
+          memory: 1024M
         reservations:
-          memory: 200M
+          memory: 512M
   redis:
     image: redis:7-alpine
     container_name: redis
