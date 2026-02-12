@@ -44,6 +44,7 @@ class MessageTransferService:
     async def _get_id_if_exists(self, message_id: int, bot: Bot) -> int | None:
         async with self._semaphore:
             try:
+                await asyncio.sleep(0.5)
                 await bot.set_message_reaction(
                     chat_id=conf.bot.parse_channel_id,
                     message_id=message_id,
@@ -51,4 +52,5 @@ class MessageTransferService:
                 )
                 return message_id
             except Exception:
+                logger.error(f"Failed to verify message {message_id}")
                 return None
