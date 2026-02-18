@@ -27,9 +27,9 @@ async def transfer_messages(
                 "🚫 В базе нет сообщений.", reply_markup=RETURN_TO_MENU_KEYBOARD
             )
             return
+        await callback.message.edit_text("📤 Переношу сообщения...")
         await message_transfer_service.transfer_messages(
             callback.from_user.id, callback.bot
         )
-        await callback.message.edit_text("📤 Переношу сообщения...")
     except Exception as e:
         logger.error(f"Failed to transfer messages: {e}")

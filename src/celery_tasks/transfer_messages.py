@@ -98,6 +98,7 @@ async def extract_messages(
                     original_text=message,
                     error_text=error_text,
                 )
+                await asyncio.sleep(0.5) 
         except MessageExtractNoName:
             logger.warning("Message %s has no buyer name", message)
             await send_error_log_message(
@@ -142,79 +143,77 @@ def transfer_message_task(self, messages: list[str], output_user_id: int) -> Non
         return
 
     base_texts, current_column = get_table_data(table_manager)
-    extracted_messages, input_messages = asyncio.run(extract_messages(messages))
+    async def main_logic(current_column):
+        extracted_messages, input_messages = await extract_messages(messages)
 
-    inserted_messages_count = 0
-    processed_products_count = 0
+        inserted_messages_count = 0
+        processed_products_count = 0
 
-    for original_text, extracted in zip(input_messages, extracted_messages):
-        failed_products: list[str] = []
-        try:
-            batch = InputBatchProduct(
-                insert_data=[
-                    BatchData(
-                        range=rowcol_to_a1(2, current_column),
-                        values=[[extracted.buyer_name]],
-                    )
-                ]
-            )
-
-            for product in extracted.products or ():
-                try:
-                    comparator_result = char_comparator.search_sim(
-                        product.name,
-                        base_texts,
-                    )
-                except Exception:
-                    logger.exception(
-                        "CharComparator failed for product '%s'", product.name
-                    )
-                    failed_products.append(product.name)
-                    continue
-
-                batch.insert_data.append(
-                    BatchData(
-                        range=rowcol_to_a1(
-                            comparator_result.horiazontal_product_line,
-                            current_column,
-                        ),
-                        values=[[product.count]],
-                    )
+        for original_text, extracted in zip(input_messages, extracted_messages):
+            failed_products: list[str] = []
+            try:
+                batch = InputBatchProduct(
+                    insert_data=[
+                        BatchData(
+                            range=rowcol_to_a1(2, current_column),
+                            values=[[extracted.buyer_name]],
+                        )
+                    ]
                 )
 
-                product.name = comparator_result.similar_base_text
-                processed_products_count += 1
+                for product in extracted.products or ():
+                    try:
+                        comparator_result = char_comparator.search_sim(
+                            product.name,
+                            base_texts,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "CharComparator failed for product '%s'", product.name
+                        )
+                        failed_products.append(product.name)
+                        continue
 
-            table_manager.batch_update(batch)
-            inserted_messages_count += 1
-            current_column += 1
+                    batch.insert_data.append(
+                        BatchData(
+                            range=rowcol_to_a1(
+                                comparator_result.horiazontal_product_line,
+                                current_column,
+                            ),
+                            values=[[product.count]],
+                        )
+                    )
 
-            asyncio.run(
-                send_log_message(
-                    original_text=original_text,
-                    extract_message_text=extracted,
-                    message_input_products=batch,
-                )
-            )
+                    product.name = comparator_result.similar_base_text
+                    processed_products_count += 1
 
-        except Exception as e:
-            logger.exception("Failed to process message (critical): %s", e)
-            asyncio.run(
-                send_error_log_message(
-                    original_text=original_text,
-                    error_text=str(e),
-                )
-            )
-    result_text = get_send_result_text(
-        len(messages),
-        inserted_messages_count,
-        sum(len(msg.products) for msg in extracted_messages if msg.products),
-        processed_products_count,
-    )
+                table_manager.batch_update(batch)
+                inserted_messages_count += 1
+                current_column += 1
+                
+                await send_log_message(
+                        original_text=original_text,
+                        extract_message_text=extracted,
+                        message_input_products=batch,
+                    )
+                await asyncio.sleep(1) 
 
-    asyncio.run(
-        send_telegram_message(
-            chat_id=output_user_id,
-            text=result_text,
+            except Exception as e:
+                logger.exception("Failed to process message (critical): %s", e)
+                await send_error_log_message(
+                        original_text=original_text,
+                        error_text=str(e),
+                    )
+
+        result_text = get_send_result_text(
+            len(messages),
+            inserted_messages_count,
+            sum(len(msg.products) for msg in extracted_messages if msg.products),
+            processed_products_count,
         )
-    )
+
+        await send_telegram_message(
+                chat_id=output_user_id,
+                text=result_text,
+            )
+    asyncio.run(main_logic(current_column))
