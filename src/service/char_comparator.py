@@ -109,7 +109,6 @@ class CharComparator:
             return ""
         t = text.lower()
         if self.remove_punctuation:
-            # keep words/letters/digits and whitespace; supports unicode letters
             t = re.sub(r"[^\w\s]", "", t, flags=re.UNICODE)
         if self.remove_extra_spaces:
             t = re.sub(r"\s+", " ", t).strip()
@@ -120,7 +119,6 @@ class CharComparator:
     # -----------------------
     @staticmethod
     def _char_freq_cosine(a: str, b: str) -> float:
-        # Векторы частот символов -> косинусное сходство (0..100)
         ca = Counter(a)
         cb = Counter(b)
         if not ca or not cb:
@@ -135,11 +133,10 @@ class CharComparator:
         return cos * 100.0
 
     def _ngram_dice(self, a: str, b: str) -> float:
-        # Counts-based Dice coefficient for n-grams (2*|A∩B|/(|A|+|B|))
         n = max(1, self.ngram_n)
 
         def ngrams(s: str):
-            s_padded = s  # could pad with spaces if needed
+            s_padded = s
             if len(s_padded) < n:
                 return []
             return [s_padded[i : i + n] for i in range(len(s_padded) - n + 1)]
@@ -155,11 +152,9 @@ class CharComparator:
 
     @staticmethod
     def _lcs_similarity(a: str, b: str) -> float:
-        # normalized length of LCS (longest common subsequence)
         if not a or not b:
             return 0.0
         la, lb = len(a), len(b)
-        # DP matrix smaller dimension first to save memory
         dp = [0] * (lb + 1)
         for i in range(1, la + 1):
             prev = 0
@@ -177,14 +172,12 @@ class CharComparator:
 
     @staticmethod
     def _levenshtein_similarity(a: str, b: str) -> float:
-        # normalized Levenshtein similarity: (1 - distance / max_len) * 100
         if a == b:
             return 100.0
         if not a or not b:
             return 0.0
         la, lb = len(a), len(b)
         if la < lb:
-            # swap to ensure la >= lb to reduce memory
             a, b = b, a
             la, lb = lb, la
         previous = list(range(lb + 1))
